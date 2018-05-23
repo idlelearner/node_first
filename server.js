@@ -5,8 +5,11 @@ const MongoClient = require('mongodb').MongoClient
 const bodyParser= require('body-parser')
 const app = express()
 
-app.use(bodyParser.urlencoded({extended: true}))
 app.set('view engine', 'ejs')
+
+app.use(bodyParser.urlencoded({extended: true}))
+app.use(bodyParser.json())
+app.use(express.static('public'))
 
 var db
 
@@ -41,3 +44,30 @@ app.post('/quotes', (req, res) => {
       res.render('index.ejs', {quotes: result})
     })
   })
+
+  app.put('/quotes', (req, res) => {
+    console.log('In put received : ' + res)
+    db.collection('quotes')
+    .findOneAndUpdate({name: 'Yoda'}, {
+      $set: {
+        name: req.body.name,
+        quote: req.body.quote
+      }
+    }, {
+      sort: {_id: -1},
+      upsert: true
+    }, (err, result) => {
+      if (err) return res.send(err)
+      res.send(result)
+    })
+  })
+
+  app.delete('/quotes', (req, res) => {
+    db.collection('quotes').findOneAndDelete({name: req.body.name},
+    (err, result) => {
+      if (err) return res.send(500, err)
+      console.log('Deleting Darth warder quote!')
+      res.send({message: 'A darth vadar quote got deleted'})
+    })
+  })
+  
